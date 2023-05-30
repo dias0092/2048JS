@@ -556,9 +556,9 @@ function runBot() {
     if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
       clearInterval(botInterval);
       botButton.disabled = false;
-      alert("Bot has finished");
+      gameOver();
     }
-  }, 400);
+  }, 500);
 }
 function moveUp() {
   return slideTiles(grid.cellsByColumn);
