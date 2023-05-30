@@ -141,9 +141,11 @@ var GRID_SIZE = 4;
 var CELL_SIZE = 20;
 var CELL_GAP = 2;
 var _cells = /*#__PURE__*/new WeakMap();
+var _score = /*#__PURE__*/new WeakMap();
 var _emptyCells = /*#__PURE__*/new WeakMap();
 var Grid = /*#__PURE__*/function () {
   function Grid(gridElement) {
+    var _this = this;
     _classCallCheck(this, Grid);
     _classPrivateFieldInitSpec(this, _emptyCells, {
       get: _get_emptyCells,
@@ -153,17 +155,30 @@ var Grid = /*#__PURE__*/function () {
       writable: true,
       value: void 0
     });
+    _classPrivateFieldInitSpec(this, _score, {
+      writable: true,
+      value: void 0
+    });
     gridElement.style.setProperty("--grid-size", GRID_SIZE);
     gridElement.style.setProperty("--cell-size", "".concat(CELL_SIZE, "vmin"));
     gridElement.style.setProperty("--cell-gap", "".concat(CELL_GAP, "vmin"));
     _classPrivateFieldSet(this, _cells, createCellElements(gridElement).map(function (cellElement, index) {
-      return new Cell(cellElement, index % GRID_SIZE, Math.floor(index / GRID_SIZE));
+      return new Cell(cellElement, index % GRID_SIZE, Math.floor(index / GRID_SIZE), _this);
     }));
+    _classPrivateFieldSet(this, _score, 0);
   }
   _createClass(Grid, [{
     key: "cells",
     get: function get() {
       return _classPrivateFieldGet(this, _cells);
+    }
+  }, {
+    key: "score",
+    get: function get() {
+      return _classPrivateFieldGet(this, _score);
+    },
+    set: function set(value) {
+      _classPrivateFieldSet(this, _score, value);
     }
   }, {
     key: "cellsByRow",
@@ -189,6 +204,11 @@ var Grid = /*#__PURE__*/function () {
       var randomIndex = Math.floor(Math.random() * _classPrivateFieldGet(this, _emptyCells).length);
       return _classPrivateFieldGet(this, _emptyCells)[randomIndex];
     }
+  }, {
+    key: "updateScore",
+    value: function updateScore(mergedValue) {
+      _classPrivateFieldSet(this, _score, _classPrivateFieldGet(this, _score) + mergedValue);
+    }
   }]);
   return Grid;
 }();
@@ -204,7 +224,7 @@ var _y = /*#__PURE__*/new WeakMap();
 var _tile = /*#__PURE__*/new WeakMap();
 var _mergeTile = /*#__PURE__*/new WeakMap();
 var Cell = /*#__PURE__*/function () {
-  function Cell(cellElement, x, y) {
+  function Cell(cellElement, x, y, grid) {
     _classCallCheck(this, Cell);
     _classPrivateFieldInitSpec(this, _cellElement, {
       writable: true,
@@ -229,6 +249,7 @@ var Cell = /*#__PURE__*/function () {
     _classPrivateFieldSet(this, _cellElement, cellElement);
     _classPrivateFieldSet(this, _x, x);
     _classPrivateFieldSet(this, _y, y);
+    this.grid = grid;
   }
   _createClass(Cell, [{
     key: "x",
@@ -263,6 +284,11 @@ var Cell = /*#__PURE__*/function () {
       _classPrivateFieldGet(this, _mergeTile).y = _classPrivateFieldGet(this, _y);
     }
   }, {
+    key: "tileValue",
+    get: function get() {
+      return this.tile ? this.tile.value : 0;
+    }
+  }, {
     key: "canAccept",
     value: function canAccept(tile) {
       return this.tile == null || this.mergeTile == null && this.tile.value === tile.value;
@@ -271,9 +297,12 @@ var Cell = /*#__PURE__*/function () {
     key: "mergeTiles",
     value: function mergeTiles() {
       if (this.tile == null || this.mergeTile == null) return;
-      this.tile.value = this.tile.value + this.mergeTile.value;
+      var originalValue = this.tile.value;
+      var mergedValue = this.tile.value + this.mergeTile.value;
+      this.tile.value = mergedValue;
       this.mergeTile.remove();
       this.mergeTile = null;
+      this.grid.updateScore(originalValue);
     }
   }]);
   return Cell;
@@ -399,10 +428,22 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 var gameBoard = document.getElementById("game-board");
+var scoreValue = document.getElementById("score");
 var grid = new _Grid.default(gameBoard);
+var gameOverModal = document.getElementById("game-over-modal");
+var finalScoreSpan = document.getElementById("final-score");
+var closeModalBtn = document.getElementById("close-modal-btn");
+document.getElementById("new-game").addEventListener("click", newGame);
 grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
 grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
 setupInput();
+closeModalBtn.onclick = function () {
+  gameOverModal.style.display = "none";
+};
+function gameOver() {
+  finalScoreSpan.textContent = grid.score;
+  gameOverModal.style.display = "block";
+}
 function setupInput() {
   window.addEventListener("keydown", handleInput, {
     once: true
@@ -475,25 +516,49 @@ function _handleInput() {
           grid.cells.forEach(function (cell) {
             return cell.mergeTiles();
           });
+          scoreValue.textContent = "Score: ".concat(grid.score);
           newTile = new _Tile.default(gameBoard);
           grid.randomEmptyCell().tile = newTile;
           if (!(!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight())) {
-            _context.next = 35;
+            _context.next = 36;
             break;
           }
           newTile.waitForTransition(true).then(function () {
-            alert("You lose");
+            clearInterval(botInterval);
+            gameOver();
           });
           return _context.abrupt("return");
-        case 35:
-          setupInput();
         case 36:
+          setupInput();
+        case 37:
         case "end":
           return _context.stop();
       }
     }, _callee);
   }));
   return _handleInput.apply(this, arguments);
+}
+var botButton = document.createElement("button");
+botButton.textContent = "Bot";
+botButton.classList.add("btn");
+botButton.addEventListener("click", runBot);
+document.body.appendChild(botButton);
+var botInterval;
+function runBot() {
+  botButton.disabled = true;
+  botInterval = setInterval(function () {
+    var directions = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+    var randomDirection = directions[Math.floor(Math.random() * directions.length)];
+    var event = new KeyboardEvent("keydown", {
+      key: randomDirection
+    });
+    handleInput(event);
+    if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
+      clearInterval(botInterval);
+      botButton.disabled = false;
+      alert("Bot has finished");
+    }
+  }, 300);
 }
 function moveUp() {
   return slideTiles(grid.cellsByColumn);
@@ -562,6 +627,21 @@ function canMove(cells) {
     });
   });
 }
+function newGame() {
+  grid.cells.forEach(function (cell) {
+    if (cell.tile) {
+      cell.tile.remove();
+      cell.tile = null;
+    }
+  });
+  grid.score = 0;
+  scoreValue.textContent = "Score: ".concat(grid.score);
+  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
+  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
+  clearInterval(botInterval);
+  botButton.disabled = false;
+  setupInput();
+}
 },{"./Grid.js":"src/Grid.js","./Tile.js":"src/Tile.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -587,7 +667,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "43713" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "35163" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

@@ -2,11 +2,27 @@ import Grid from "./Grid.js";
 import Tile from "./Tile.js";
 
 const gameBoard = document.getElementById("game-board");
-
+const scoreValue = document.getElementById("score");
 const grid = new Grid(gameBoard);
+
+const gameOverModal = document.getElementById("game-over-modal");
+const finalScoreSpan = document.getElementById("final-score");
+const closeModalBtn = document.getElementById("close-modal-btn");
+
+document.getElementById("new-game").addEventListener("click", newGame);
+
 grid.randomEmptyCell().tile = new Tile(gameBoard);
 grid.randomEmptyCell().tile = new Tile(gameBoard);
 setupInput();
+
+closeModalBtn.onclick = function () {
+  gameOverModal.style.display = "none";
+};
+
+function gameOver() {
+  finalScoreSpan.textContent = grid.score;
+  gameOverModal.style.display = "block";
+}
 
 function setupInput() {
   window.addEventListener("keydown", handleInput, { once: true });
@@ -48,18 +64,44 @@ async function handleInput(e) {
   }
 
   grid.cells.forEach((cell) => cell.mergeTiles());
-
+  scoreValue.textContent = `Score: ${grid.score}`;
   const newTile = new Tile(gameBoard);
   grid.randomEmptyCell().tile = newTile;
 
   if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
     newTile.waitForTransition(true).then(() => {
-      alert("You lose");
+      clearInterval(botInterval);
+      gameOver();
     });
     return;
   }
 
   setupInput();
+}
+
+const botButton = document.createElement("button");
+botButton.textContent = "Bot";
+botButton.classList.add("btn");
+botButton.addEventListener("click", runBot);
+document.body.appendChild(botButton);
+
+let botInterval;
+
+function runBot() {
+  botButton.disabled = true;
+  botInterval = setInterval(() => {
+    const directions = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+    const randomDirection =
+      directions[Math.floor(Math.random() * directions.length)];
+    const event = new KeyboardEvent("keydown", { key: randomDirection });
+    handleInput(event);
+
+    if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
+      clearInterval(botInterval);
+      botButton.disabled = false;
+      alert("Bot has finished");
+    }
+  }, 300);
 }
 
 function moveUp() {
@@ -132,4 +174,24 @@ function canMove(cells) {
       return moveToCell.canAccept(cell.tile);
     });
   });
+}
+
+function newGame() {
+  grid.cells.forEach((cell) => {
+    if (cell.tile) {
+      cell.tile.remove();
+      cell.tile = null;
+    }
+  });
+
+  grid.score = 0;
+  scoreValue.textContent = `Score: ${grid.score}`;
+
+  grid.randomEmptyCell().tile = new Tile(gameBoard);
+  grid.randomEmptyCell().tile = new Tile(gameBoard);
+
+  clearInterval(botInterval);
+  botButton.disabled = false;
+
+  setupInput();
 }
