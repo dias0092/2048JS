@@ -101,7 +101,7 @@ function runBot() {
       botButton.disabled = false;
       alert("Bot has finished");
     }
-  }, 300);
+  }, 400);
 }
 
 function moveUp() {
