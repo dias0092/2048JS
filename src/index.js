@@ -5,9 +5,29 @@ const gameBoard = document.getElementById("game-board");
 const scoreValue = document.getElementById("score");
 const grid = new Grid(gameBoard);
 
+
 const gameOverModal = document.getElementById("game-over-modal");
 const finalScoreSpan = document.getElementById("final-score");
 const closeModalBtn = document.getElementById("close-modal-btn");
+
+let highScore = localStorage.getItem('highScore') || 0;
+let highScoreTime = localStorage.getItem('highScoreTime') || 0;
+let startTime = Date.now();
+let endTime;
+let totalTime;
+
+let difficulty = 'easy';
+let fourProbability = 0.2;
+document.getElementById('difficulty').addEventListener('change', function(e) {
+  difficulty = e.target.value;
+    if (difficulty === 'easy') {
+    fourProbability = 0.2;
+  } else if (difficulty === 'medium') {
+    fourProbability = 0.3;
+  } else if (difficulty === 'hard') {
+    fourProbability = 0.4;
+  }
+});
 
 document.getElementById("new-game").addEventListener("click", newGame);
 
@@ -20,8 +40,19 @@ closeModalBtn.onclick = function () {
 };
 
 function gameOver() {
+  endTime = Date.now();
+  
   finalScoreSpan.textContent = grid.score;
   gameOverModal.style.display = "block";
+  totalTime = (endTime - startTime) / 1000; 
+if (grid.score > highScore || (grid.score === highScore && totalTime < highScoreTime)) {
+  highScore = grid.score;
+  highScoreTime = totalTime;
+  localStorage.setItem('highScore', highScore);
+  localStorage.setItem('highScoreTime', highScoreTime);
+  document.getElementById('high-score').textContent = `High Score: ${highScore}`;
+  document.getElementById('high-score-time').textContent = `Time: ${highScoreTime}s`;
+}
 }
 
 function setupInput() {
@@ -65,9 +96,9 @@ async function handleInput(e) {
 
   grid.cells.forEach((cell) => cell.mergeTiles());
   scoreValue.textContent = `Score: ${grid.score}`;
-  const newTile = new Tile(gameBoard);
+  const newTile = new Tile(gameBoard, Math.random() < fourProbability ? 4 : 2);
   grid.randomEmptyCell().tile = newTile;
-
+  
   if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
     newTile.waitForTransition(true).then(() => {
       clearInterval(botInterval);
@@ -177,18 +208,19 @@ function canMove(cells) {
 }
 
 function newGame() {
+  startTime = Date.now();
+  
   grid.cells.forEach((cell) => {
     if (cell.tile) {
       cell.tile.remove();
       cell.tile = null;
     }
   });
-
+  document.getElementById('high-score').textContent = `High Score: ${highScore}`;
+  document.getElementById('high-score-time').textContent = `Time: ${highScoreTime}ms`;
+  
   grid.score = 0;
   scoreValue.textContent = `Score: ${grid.score}`;
-
-  grid.randomEmptyCell().tile = new Tile(gameBoard);
-  grid.randomEmptyCell().tile = new Tile(gameBoard);
 
   clearInterval(botInterval);
   botButton.disabled = false;

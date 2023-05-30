@@ -433,6 +433,23 @@ var grid = new _Grid.default(gameBoard);
 var gameOverModal = document.getElementById("game-over-modal");
 var finalScoreSpan = document.getElementById("final-score");
 var closeModalBtn = document.getElementById("close-modal-btn");
+var highScore = localStorage.getItem('highScore') || 0;
+var highScoreTime = localStorage.getItem('highScoreTime') || 0;
+var startTime = Date.now();
+var endTime;
+var totalTime;
+var difficulty = 'easy';
+var fourProbability = 0.2;
+document.getElementById('difficulty').addEventListener('change', function (e) {
+  difficulty = e.target.value;
+  if (difficulty === 'easy') {
+    fourProbability = 0.2;
+  } else if (difficulty === 'medium') {
+    fourProbability = 0.3;
+  } else if (difficulty === 'hard') {
+    fourProbability = 0.4;
+  }
+});
 document.getElementById("new-game").addEventListener("click", newGame);
 grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
 grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
@@ -441,8 +458,18 @@ closeModalBtn.onclick = function () {
   gameOverModal.style.display = "none";
 };
 function gameOver() {
+  endTime = Date.now();
   finalScoreSpan.textContent = grid.score;
   gameOverModal.style.display = "block";
+  totalTime = (endTime - startTime) / 1000;
+  if (grid.score > highScore || grid.score === highScore && totalTime < highScoreTime) {
+    highScore = grid.score;
+    highScoreTime = totalTime;
+    localStorage.setItem('highScore', highScore);
+    localStorage.setItem('highScoreTime', highScoreTime);
+    document.getElementById('high-score').textContent = "High Score: ".concat(highScore);
+    document.getElementById('high-score-time').textContent = "Time: ".concat(highScoreTime, "s");
+  }
 }
 function setupInput() {
   window.addEventListener("keydown", handleInput, {
@@ -517,7 +544,7 @@ function _handleInput() {
             return cell.mergeTiles();
           });
           scoreValue.textContent = "Score: ".concat(grid.score);
-          newTile = new _Tile.default(gameBoard);
+          newTile = new _Tile.default(gameBoard, Math.random() < fourProbability ? 4 : 2);
           grid.randomEmptyCell().tile = newTile;
           if (!(!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight())) {
             _context.next = 36;
@@ -628,16 +655,17 @@ function canMove(cells) {
   });
 }
 function newGame() {
+  startTime = Date.now();
   grid.cells.forEach(function (cell) {
     if (cell.tile) {
       cell.tile.remove();
       cell.tile = null;
     }
   });
+  document.getElementById('high-score').textContent = "High Score: ".concat(highScore);
+  document.getElementById('high-score-time').textContent = "Time: ".concat(highScoreTime, "ms");
   grid.score = 0;
   scoreValue.textContent = "Score: ".concat(grid.score);
-  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
-  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
   clearInterval(botInterval);
   botButton.disabled = false;
   setupInput();
