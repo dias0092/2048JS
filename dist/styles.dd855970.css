@@ -5,28 +5,85 @@
   font-family: Arial;
 }
 body {
-  background-color: #333333;
+  background-color: #faf8ef;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   height: 100vh;
   margin: 0;
-  font-size: 7.5vmin;
+  font-size: 2em;
+  color: #776e65;
+  font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 #game-board {
   display: grid;
   grid-template-columns: repeat(var(--grid-size), var(--cell-size));
   grid-template-rows: repeat(var(--grid-size), var(--cell-size));
-  background-color: #ccc;
+  background-color: #bbada0;
   gap: var(--cell-gap);
-  border: 1vmin;
+  border-radius: 10px;
   padding: var(--cell-gap);
   position: relative;
+  margin-bottom: 20px;
+}
+.score-board {
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  max-width: 500px;
+}
+#score {
+  font-weight: bold;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 0.8em;
+  color: #faf8ef;
+  background-color: #8f7a66;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #9e8b77;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  text-align: center;
+}
+
+#close-modal-btn {
+  padding: 10px 20px;
+  margin-top: 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
 .cell {
-  background-color: #aaa;
+  background-color: rgb(228, 227, 205);
   border-radius: 1vmin;
 }
 
@@ -41,7 +98,7 @@ body {
   top: calc(var(--y) * (var(--cell-size) + var(--cell-gap)) + var(--cell-gap));
   left: calc(var(--x) * (var(--cell-size) + var(--cell-gap)) + var(--cell-gap));
   font-weight: bold;
-  background-color: hsl(200, 50%, var(--background-lightness));
+  background-color: hsl(50, 50%, var(--background-lightness));
   color: hsl(200, 25%, var(--text-lightness));
   animation: show 200ms ease-in-out;
   transition: 100ms ease-in-out;
@@ -53,6 +110,5 @@ body {
     transform: scale(0);
   }
 }
-
 
 /*# sourceMappingURL=/styles.dd855970.css.map */

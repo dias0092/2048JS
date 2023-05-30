@@ -4,6 +4,7 @@ const CELL_GAP = 2;
 
 export default class Grid {
   #cells;
+  #score;
 
   constructor(gridElement) {
     gridElement.style.setProperty("--grid-size", GRID_SIZE);
@@ -13,13 +14,23 @@ export default class Grid {
       return new Cell(
         cellElement,
         index % GRID_SIZE,
-        Math.floor(index / GRID_SIZE)
+        Math.floor(index / GRID_SIZE),
+        this
       );
     });
+    this.#score = 0;
   }
 
   get cells() {
     return this.#cells;
+  }
+
+  get score() {
+    return this.#score;
+  }
+
+  set score(value) {
+    this.#score = value;
   }
 
   get cellsByRow() {
@@ -46,6 +57,10 @@ export default class Grid {
     const randomIndex = Math.floor(Math.random() * this.#emptyCells.length);
     return this.#emptyCells[randomIndex];
   }
+
+  updateScore(mergedValue) {
+    this.#score += mergedValue;
+  }
 }
 
 class Cell {
@@ -55,10 +70,11 @@ class Cell {
   #tile;
   #mergeTile;
 
-  constructor(cellElement, x, y) {
+  constructor(cellElement, x, y, grid) {
     this.#cellElement = cellElement;
     this.#x = x;
     this.#y = y;
+    this.grid = grid;
   }
 
   get x() {
@@ -90,6 +106,9 @@ class Cell {
     this.#mergeTile.x = this.#x;
     this.#mergeTile.y = this.#y;
   }
+  get tileValue() {
+    return this.tile ? this.tile.value : 0;
+  }
 
   canAccept(tile) {
     return (
@@ -100,9 +119,15 @@ class Cell {
 
   mergeTiles() {
     if (this.tile == null || this.mergeTile == null) return;
-    this.tile.value = this.tile.value + this.mergeTile.value;
+
+    const originalValue = this.tile.value;
+
+    const mergedValue = this.tile.value + this.mergeTile.value;
+    this.tile.value = mergedValue;
     this.mergeTile.remove();
     this.mergeTile = null;
+
+    this.grid.updateScore(originalValue);
   }
 }
 
