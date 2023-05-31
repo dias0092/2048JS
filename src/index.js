@@ -25,14 +25,14 @@ document.getElementById('difficulty').addEventListener('change', function(e) {
   } else if (difficulty === 'medium') {
     fourProbability = 0.3;
   } else if (difficulty === 'hard') {
-    fourProbability = 0.4;
+    fourProbability = 0.5;
   }
 });
 
 document.getElementById("new-game").addEventListener("click", newGame);
 
-grid.randomEmptyCell().tile = new Tile(gameBoard);
-grid.randomEmptyCell().tile = new Tile(gameBoard);
+grid.randomEmptyCell().tile = new Tile(gameBoard, fourProbability);
+grid.randomEmptyCell().tile = new Tile(gameBoard , fourProbability);
 setupInput();
 
 closeModalBtn.onclick = function () {
@@ -96,7 +96,7 @@ async function handleInput(e) {
 
   grid.cells.forEach((cell) => cell.mergeTiles());
   scoreValue.textContent = `Score: ${grid.score}`;
-  const newTile = new Tile(gameBoard, Math.random() < fourProbability ? 4 : 2);
+  const newTile = new Tile(gameBoard , fourProbability);
   grid.randomEmptyCell().tile = newTile;
   
   if (!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight()) {
@@ -218,7 +218,8 @@ function newGame() {
   });
   document.getElementById('high-score').textContent = `High Score: ${highScore}`;
   document.getElementById('high-score-time').textContent = `Time: ${highScoreTime}ms`;
-  
+  grid.randomEmptyCell().tile = new Tile(gameBoard);
+  grid.randomEmptyCell().tile = new Tile(gameBoard);
   grid.score = 0;
   scoreValue.textContent = `Score: ${grid.score}`;
 
