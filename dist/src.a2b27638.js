@@ -138,8 +138,8 @@ function _classPrivateFieldSet(receiver, privateMap, value) { var descriptor = _
 function _classExtractFieldDescriptor(receiver, privateMap, action) { if (!privateMap.has(receiver)) { throw new TypeError("attempted to " + action + " private field on non-instance"); } return privateMap.get(receiver); }
 function _classApplyDescriptorSet(receiver, descriptor, value) { if (descriptor.set) { descriptor.set.call(receiver, value); } else { if (!descriptor.writable) { throw new TypeError("attempted to set read only private field"); } descriptor.value = value; } }
 var GRID_SIZE = 4;
-var CELL_SIZE = 20;
-var CELL_GAP = 2;
+var CELL_SIZE = 15;
+var CELL_GAP = 1;
 var _cells = /*#__PURE__*/new WeakMap();
 var _score = /*#__PURE__*/new WeakMap();
 var _emptyCells = /*#__PURE__*/new WeakMap();
@@ -342,8 +342,7 @@ var _x = /*#__PURE__*/new WeakMap();
 var _y = /*#__PURE__*/new WeakMap();
 var _value = /*#__PURE__*/new WeakMap();
 var Tile = /*#__PURE__*/function () {
-  function Tile(tileContainer) {
-    var value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Math.random() > 0.2 ? 2 : 4;
+  function Tile(tileContainer, fourProbability) {
     _classCallCheck(this, Tile);
     _classPrivateFieldInitSpec(this, _tileElement, {
       writable: true,
@@ -364,7 +363,7 @@ var Tile = /*#__PURE__*/function () {
     _classPrivateFieldSet(this, _tileElement, document.createElement("div"));
     _classPrivateFieldGet(this, _tileElement).classList.add("tile");
     tileContainer.append(_classPrivateFieldGet(this, _tileElement));
-    this.value = value;
+    this.value = Math.random() > fourProbability ? 2 : 4;
   }
   _createClass(Tile, [{
     key: "value",
@@ -447,12 +446,12 @@ document.getElementById('difficulty').addEventListener('change', function (e) {
   } else if (difficulty === 'medium') {
     fourProbability = 0.3;
   } else if (difficulty === 'hard') {
-    fourProbability = 0.4;
+    fourProbability = 0.5;
   }
 });
 document.getElementById("new-game").addEventListener("click", newGame);
-grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
-grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
+grid.randomEmptyCell().tile = new _Tile.default(gameBoard, fourProbability);
+grid.randomEmptyCell().tile = new _Tile.default(gameBoard, fourProbability);
 setupInput();
 closeModalBtn.onclick = function () {
   gameOverModal.style.display = "none";
@@ -544,7 +543,7 @@ function _handleInput() {
             return cell.mergeTiles();
           });
           scoreValue.textContent = "Score: ".concat(grid.score);
-          newTile = new _Tile.default(gameBoard, Math.random() < fourProbability ? 4 : 2);
+          newTile = new _Tile.default(gameBoard, fourProbability);
           grid.randomEmptyCell().tile = newTile;
           if (!(!canMoveUp() && !canMoveDown() && !canMoveLeft() && !canMoveRight())) {
             _context.next = 36;
@@ -664,6 +663,8 @@ function newGame() {
   });
   document.getElementById('high-score').textContent = "High Score: ".concat(highScore);
   document.getElementById('high-score-time').textContent = "Time: ".concat(highScoreTime, "ms");
+  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
+  grid.randomEmptyCell().tile = new _Tile.default(gameBoard);
   grid.score = 0;
   scoreValue.textContent = "Score: ".concat(grid.score);
   clearInterval(botInterval);
@@ -695,7 +696,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "35163" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "45327" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
